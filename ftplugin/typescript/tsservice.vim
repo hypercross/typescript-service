@@ -1,6 +1,8 @@
 if exists("g:tsservice_loaded")
     if !exists("b:opened")
         let b:opened = 1
+        let b:endLine = line('$')
+        let b:endPos = col([b:endLine, '$'])
         python tssOpen()
     endif
     finish
@@ -16,8 +18,18 @@ if !exists("g:tsserver")
 endif
 
 exec 'pyfile ' . expand('<sfile>:p:h') . '/tsservice.py'
-python tssOpen()
 let b:opened = 1
+let b:endLine = line('$')
+let b:endPos = col([b:endLine, '$'])
+python tssOpen()
+
+func tsservice#updateBuffer()
+    let endLine = line('$')
+    let endPos = col([endLine, '$'])
+    python tssUpdateBuffer()
+    let b:endLine = endLine
+    let b:endPos = endPos
+endfunc
 
 let g:tsservice_loaded = 1
 
@@ -37,6 +49,7 @@ nnoremap <F12> :call tsservice#listUsages()<CR>
 
 func tsservice#complete(findstart, base)
     if a:findstart == 1
+        call tsservice#updateBuffer()
         return pyeval('tssFindCompletionStart()')
     else
         python tssCompletions()
@@ -45,4 +58,4 @@ func tsservice#complete(findstart, base)
 endfunc
 set omnifunc=tsservice#complete
 
-autocmd BufWritePost *.ts python tssReload()
+autocmd BufWritePost *.ts call tsservice#updateBuffer()

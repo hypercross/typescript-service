@@ -182,6 +182,18 @@ def tssUsages(fp=None,row=None,col=None):
         col = col + 1
     tssReq('occurrences', {'file': fp, 'line': row, 'offset': col})
 
+def tssUpdateBuffer():
+    if in_vim:
+        fp = vim.current.buffer.name
+        endLine = int(vim.eval('b:endLine'))
+        endPos = int(vim.eval('b:endPos'))
+        content = '\n'.join(vim.current.buffer)
+        print '%s, %d, %d, %s' % (fp, endLine, endPos, content)
+        tssReq('change', {'file': fp,
+                          'line': 1, 'offset': 1,
+                          'endLine': endLine, 'endOffset': endPos,
+                          'insertString': content})
+
 def tssFindCompletionStart():
     line = vim.current.line
     (row, col) = vim.current.window.cursor 
