@@ -29,7 +29,7 @@ what was that?
         x completion
         - project err
     - handle
-        - definition jump
+        x definition jump
         - usages quickfix
         - signature print
         - completion omnifunc

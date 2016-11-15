@@ -25,8 +25,8 @@ let g:tsservice_loaded = 1
 
 func tsservice#defJump()
     python tssDefinition()
-    python tssHandleAll()
+    python tssHandleSeq(tssReqseq)
 endfunc
-nnoremap <c-]> :call tsservice#defJump()<CR>
+"nnoremap <c-]> :call tsservice#defJump()<CR>
 
 autocmd BufWritePost *.ts python tssReload()
