@@ -79,11 +79,26 @@ def tssHandleAll():
                 tssHandleErrMsg(parsed[u'body'])
             else:
                 print 'unknown event: %s' % msgEvent
-
-        print parsed
+                print parsed
+        elif msgType == 'response':
+            success = parsed[u'success']
+            command = parsed['command']
+            if not success:
+                print parsed['message']
+            elif command == 'definition':
+                tssHandleDefJump(parsed['body'])
+            else:
+                print 'unknown response: %s' % command
+                print parsed
 
 def tssHandleErrMsg(msg):
     print msg
+
+def tssHandleDefJump(msg):
+    item = msg[0]
+    start = item['start']
+    f = item['file']
+    vim.command('e +%d %s' % (start['line'], f))
 
 def tssReq(cmd, args):
     global seq
@@ -103,6 +118,24 @@ def tssReload(fp = None):
     if in_vim:
         fp = vim.current.buffer.name
     tssReq('reload', {"file": fp, "tmpfile": fp})
+
+def tssDefinition(fp=None,row=None,col=None):
+    if in_vim:
+        fp = vim.current.buffer.name
+        (row, col) = vim.current.window.cursor
+    tssReq('definition', {'file': fp, 'line': row, 'offset': col})
+
+def tssUsages(fp=None,row=None,col=None):
+    if in_vim:
+        fp = vim.current.buffer.name
+        (row, col) = vim.current.window.cursor
+    tssReq('occurrences', {'file': fp, 'line': row, 'offset': col})
+
+def tssCompletions(fp=None,row=None,col=None):
+    if in_vim:
+        fp = vim.current.buffer.name
+        (row, col) = vim.current.window.cursor
+    tssReq('completions', {'file': fp, 'line': row, 'offset': col})
 
 def tssFileErr(fp = None):
     if in_vim:
