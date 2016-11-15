@@ -30,7 +30,7 @@ what was that?
         - project err
     - handle
         x definition jump
-        - usages quickfix
+        x usages quickfix
         - signature print
-        - completion omnifunc
+        x completion omnifunc
         - project err neomake

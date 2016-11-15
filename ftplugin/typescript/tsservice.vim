@@ -25,8 +25,24 @@ let g:tsservice_loaded = 1
 
 func tsservice#defJump()
     python tssDefinition()
-    python tssHandleSeq(tssReqseq)
+    python tssHandleRecent()
 endfunc
-"nnoremap <c-]> :call tsservice#defJump()<CR>
+nnoremap <c-]> :call tsservice#defJump()<CR>
+"
+func tsservice#listUsages()
+    python tssUsages()
+    python tssHandleRecent()
+endfunc
+nnoremap <F12> :call tsservice#listUsages()<CR>
+
+func tsservice#complete(findstart, base)
+    if a:findstart == 1
+        return pyeval('tssFindCompletionStart()')
+    else
+        python tssCompletions()
+        return pyeval('tssHandleRecent()')
+    endif
+endfunc
+set omnifunc=tsservice#complete
 
 autocmd BufWritePost *.ts python tssReload()

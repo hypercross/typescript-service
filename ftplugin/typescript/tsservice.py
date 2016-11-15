@@ -1,4 +1,4 @@
-import subprocess, sys, json, Queue, threading, os, time
+import subprocess, sys, json, Queue, threading, os, time, re
 
 try:
     import vim
@@ -84,12 +84,11 @@ def tssHandleSeq(seq):
                 return
             if req_seq < seq:
                 continue
-            tssHandleMsg(parsed)
-            return
+            return tssHandleMsg(parsed)
         time.sleep(0.005)
 
 def tssHandleRecent():
-    tssHandleSeq(tssReqseq)
+    return tssHandleSeq(tssReqseq)
 
 def tssHandleMsg(parsed):
     msgType = parsed[u'type']
@@ -109,6 +108,10 @@ def tssHandleMsg(parsed):
             print parsed['message']
         elif command == 'definition':
             tssHandleDefJump(parsed['body'])
+        elif command == 'occurrences':
+            tssHandleUsages(parsed['body'])
+        elif command == 'completions':
+            return tssHandleCompletions(parsed['body'])
         else:
             print 'unknown response: %s' % command
             print parsed
@@ -121,6 +124,30 @@ def tssHandleDefJump(msg):
     start = item['start']
     f = item['file']
     vim.command('e +%d %s' % (start['line'], f))
+
+def tssHandleUsages(msg):
+    qf = []
+    for item in msg:
+        start = item['start']
+        f = item['file']
+        qf.append({'filename':f,
+                   'lnum': start['line'],
+                   'col': start['offset']})
+    vim.vars['tss_qf'] = qf
+    vim.command('call setqflist(g:tss_qf)')
+    vim.command('copen')
+
+def tssHandleCompletions(msg):
+    completions = []
+    for item in msg:
+        completions.append({
+            'word': item['name'],
+            'menu': '%s %s' % (item['kindModifiers'], item['kind'])
+        })
+        if len(completions) > 20:
+            break
+    print completions
+    return completions
 
 def tssReq(cmd, args):
     global tssReqseq
@@ -145,19 +172,35 @@ def tssDefinition(fp=None,row=None,col=None):
     if in_vim:
         fp = vim.current.buffer.name
         (row, col) = vim.current.window.cursor
+        col = col + 1
     tssReq('definition', {'file': fp, 'line': row, 'offset': col})
 
 def tssUsages(fp=None,row=None,col=None):
     if in_vim:
         fp = vim.current.buffer.name
         (row, col) = vim.current.window.cursor
+        col = col + 1
     tssReq('occurrences', {'file': fp, 'line': row, 'offset': col})
 
-def tssCompletions(fp=None,row=None,col=None):
+def tssFindCompletionStart():
+    line = vim.current.line
+    (row, col) = vim.current.window.cursor 
+    start = col
+    while start > 0 and re.match('[a-zA-Z]', line[start-1]):
+        start = start - 1
+    return start
+
+def tssCompletions(fp=None,row=None,col=None,prefix=''):
     if in_vim:
         fp = vim.current.buffer.name
         (row, col) = vim.current.window.cursor
-    tssReq('completions', {'file': fp, 'line': row, 'offset': col})
+        col = col+1
+        prefix = vim.eval('a:base')
+        print '%s, %d, %d, %s' % (fp, row, col, prefix)
+    tssReq('completions', {'file': fp,
+                           'line': row,
+                           'offset': col,
+                           'prefix': prefix})
 
 def tssFileErr(fp = None):
     if in_vim:
