@@ -144,9 +144,7 @@ def tssHandleCompletions(msg):
             'word': item['name'],
             'menu': '%s %s' % (item['kindModifiers'], item['kind'])
         })
-        if len(completions) > 20:
-            break
-    print completions
+    # print completions
     return completions
 
 def tssReq(cmd, args):
@@ -188,7 +186,7 @@ def tssUpdateBuffer():
         endLine = int(vim.eval('b:endLine'))
         endPos = int(vim.eval('b:endPos'))
         content = '\n'.join(vim.current.buffer)
-        print '%s, %d, %d, %s' % (fp, endLine, endPos, content)
+        # print '%s, %d, %d, %s' % (fp, endLine, endPos, content)
         tssReq('change', {'file': fp,
                           'line': 1, 'offset': 1,
                           'endLine': endLine, 'endOffset': endPos,
