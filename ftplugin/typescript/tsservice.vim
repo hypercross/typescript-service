@@ -1,10 +1,10 @@
 if exists("g:tsservice_loaded")
-  finish
+    finish
 endif
 
 if !has('python')
-  echo 'python required'
-  finish
+    echo 'python required'
+    finish
 endif
 
 if !exists("g:tsserver")
