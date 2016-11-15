@@ -1,0 +1,21 @@
+- geterr file
+- geterr proj
+- completion
+- print signature
+- goto def
+- find usage
+
+- open quickfix
+- print message
+- jump
+- open locationlist
+- omnifunc
+
+- todo
+    - trigger 'open' on open
+    - trigger 'reload' after write
+    - on receiving 'geterr' popout quickfix
+    - learn dat omnifunc
+    - print signature
+    - jump
+
