@@ -64,9 +64,15 @@ func tsservice#complete(findstart, base)
     endif
 endfunc
 
+func tsservice#quickinfo()
+    python tssQuickinfo()
+    python tssHandleRecent()
+endfunc
+
 func tsservice#setDefaultKeymap()
     nnoremap <buffer> <c-]> :call tsservice#defJump()<CR>
     nnoremap <buffer> <F12> :call tsservice#listUsages()<CR>
+    nnoremap <buffer> <c-k> :call tsservice#quickinfo()<CR>
 endfunc
 
 func tsservice#initBuffer()

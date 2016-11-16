@@ -142,10 +142,12 @@ def tssHandleMsg(parsed):
             print parsed['message']
         elif command == 'definition':
             tssHandleDefJump(parsed['body'])
-        elif command == 'occurrences':
+        elif command == 'references':
             tssHandleUsages(parsed['body'])
         elif command == 'completions':
             return tssHandleCompletions(parsed['body'])
+        elif command == 'quickinfo':
+            return tssHandleQuickinfo(parsed['body'])
         else:
             print 'unknown response: %s' % command
             print parsed
@@ -167,6 +169,8 @@ def tssLoc2Qf(msg, fp=None):
         txt = None
         if 'text' in item:
             txt = item['text']
+        if 'lineText' in item:
+            txt = item['lineText']
         data = {'filename':f,
                    'lnum': start['line'],
                    'col': start['offset']}
@@ -176,7 +180,7 @@ def tssLoc2Qf(msg, fp=None):
     return qf
 
 def tssHandleUsages(msg):
-    qf = tssLoc2Qf(msg)
+    qf = tssLoc2Qf(msg['refs'])
     vim.vars['tss_qf'] = qf
     vim.command('call setqflist(g:tss_qf)')
     vim.command('copen')
@@ -190,6 +194,9 @@ def tssHandleCompletions(msg):
         })
     # print completions
     return completions
+
+def tssHandleQuickinfo(msg):
+    vim.command('echo \'%s\'' % (msg['displayString']))
 
 def tssReq(cmd, args):
     global tssReqseq
@@ -217,12 +224,19 @@ def tssDefinition(fp=None,row=None,col=None):
         col = col + 1
     tssReq('definition', {'file': fp, 'line': row, 'offset': col})
 
+def tssQuickinfo(fp=None,row=None,col=None):
+    if in_vim:
+        fp = vim.current.buffer.name
+        (row, col) = vim.current.window.cursor
+        col = col + 1
+    tssReq('quickinfo', {'file': fp, 'line': row, 'offset': col})
+
 def tssUsages(fp=None,row=None,col=None):
     if in_vim:
         fp = vim.current.buffer.name
         (row, col) = vim.current.window.cursor
         col = col + 1
-    tssReq('occurrences', {'file': fp, 'line': row, 'offset': col})
+    tssReq('references', {'file': fp, 'line': row, 'offset': col})
 
 def tssUpdateBuffer():
     if in_vim:
