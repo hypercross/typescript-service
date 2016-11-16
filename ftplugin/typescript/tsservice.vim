@@ -67,7 +67,6 @@ endfunc
 func tsservice#setDefaultKeymap()
     nnoremap <buffer> <c-]> :call tsservice#defJump()<CR>
     nnoremap <buffer> <F12> :call tsservice#listUsages()<CR>
-    autocmd BufWritePost *.ts call tsservice#fileErr()
 endfunc
 
 func tsservice#initBuffer()
@@ -83,4 +82,8 @@ endfunc
 
 call tsservice#initBuffer()
 
-autocmd BufWritePost *.ts call tsservice#updateBuffer()
+if !exists("g:tsservice_disable_keymap")
+    autocmd BufWritePost *.ts call tsservice#updateBuffer() | call tsservice#fileErr()
+else
+    autocmd BufWritePost *.ts call tsservice#updateBuffer()
+endif
