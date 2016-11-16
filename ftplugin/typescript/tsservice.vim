@@ -84,6 +84,7 @@ func tsservice#initBuffer()
         call tsservice#setDefaultKeymap()
     endif
     setlocal omnifunc=tsservice#complete
+    autocmd BufRead *.ts setlocal omnifunc=tsservice#complete
 endfunc
 
 call tsservice#initBuffer()
