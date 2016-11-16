@@ -123,7 +123,7 @@ def tssHandleDefJump(msg):
     item = msg[0]
     start = item['start']
     f = item['file']
-    vim.command('e +%d %s' % (start['line'], f))
+    vim.command('e %s | call cursor(%d,%d)' % (f, start['line'],start['offset']))
 
 def tssHandleUsages(msg):
     qf = []
