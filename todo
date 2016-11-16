@@ -17,3 +17,9 @@ what was that?
     - brace completion
     - completion shows signature
     - usages shows signature
+
+- todo
+    - figure out how to do makeprg
+    - figure out how to get signature
+    - figure out how to fill signature info for completion / usages
+    - figure out when and how to print signature info

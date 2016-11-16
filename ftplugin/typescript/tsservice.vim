@@ -39,13 +39,24 @@ func tsservice#defJump()
     python tssDefinition()
     python tssHandleRecent()
 endfunc
-nnoremap <c-]> :call tsservice#defJump()<CR>
+nnoremap <buffer> <c-]> :call tsservice#defJump()<CR>
 "
 func tsservice#listUsages()
     python tssUsages()
     python tssHandleRecent()
 endfunc
-nnoremap <F12> :call tsservice#listUsages()<CR>
+nnoremap <buffer> <F12> :call tsservice#listUsages()<CR>
+
+func tsservice#fileErr()
+    python tssFileErr()
+    let qf = pyeval('tssWaitForFileDiag()')
+    call setqflist(qf)
+    if len(qf)
+        copen
+    else
+        cclose
+    endif
+endfunc
 
 func tsservice#complete(findstart, base)
     if a:findstart == 1
@@ -58,4 +69,4 @@ func tsservice#complete(findstart, base)
 endfunc
 set omnifunc=tsservice#complete
 
-autocmd BufWritePost *.ts call tsservice#updateBuffer()
+autocmd BufWritePost *.ts call tsservice#updateBuffer() | call tsservice#fileErr()

@@ -87,6 +87,37 @@ def tssHandleSeq(seq):
             return tssHandleMsg(parsed)
         time.sleep(0.005)
 
+def tssWaitForFileDiag():
+    semanticDiag = False
+    syntaxDiag = False
+    fp = vim.current.buffer.name
+    while semanticDiag == False or syntaxDiag == False:
+        for line in tss.checkMsgs():
+            parsed = tssParseLine(line)
+            if parsed == None:
+                continue
+            msgType = parsed[u'type']
+            if u'event' != msgType:
+                continue
+
+            if not 'body' in parsed:
+                continue
+            body = parsed['body']
+            if not 'file' in body:
+                continue
+            elif body['file'] != fp:
+                continue
+
+            eType = parsed[u'event']
+            if eType == 'syntaxDiag':
+                syntaxDiag = body['diagnostics']
+            elif eType == 'semanticDiag':
+                semanticDiag = body['diagnostics']
+
+        time.sleep(0.005)
+
+    return tssLoc2Qf(syntaxDiag, fp) or tssLoc2Qf(semanticDiag, fp)
+
 def tssHandleRecent():
     return tssHandleSeq(tssReqseq)
 
@@ -125,14 +156,22 @@ def tssHandleDefJump(msg):
     f = item['file']
     vim.command('e %s | call cursor(%d,%d)' % (f, start['line'],start['offset']))
 
-def tssHandleUsages(msg):
+def tssLoc2Qf(msg, fp=None):
     qf = []
     for item in msg:
         start = item['start']
-        f = item['file']
+        f = fp or item['file']
+        txt = None
+        if 'text' in item:
+            txt = item['text']
         qf.append({'filename':f,
                    'lnum': start['line'],
-                   'col': start['offset']})
+                   'col': start['offset'],
+                   'text': txt})
+    return qf
+
+def tssHandleUsages(msg):
+    qf = tssLoc2Qf(msg)
     vim.vars['tss_qf'] = qf
     vim.command('call setqflist(g:tss_qf)')
     vim.command('copen')
