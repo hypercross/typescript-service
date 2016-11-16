@@ -1,27 +1,27 @@
-if exists("g:tsservice_loaded")
-    if !exists("b:opened")
-        let b:opened = 1
-        let b:endLine = line('$')
-        let b:endPos = col([b:endLine, '$'])
-        python tssOpen()
-    endif
+if exists("g:tsservice_disabled")
     finish
 endif
 
 if !has('python')
-    echo 'python required'
+    echo 'python required! typescript-service is disabled'
+    let g:tsservice_disabled = 1
     finish
 endif
+
+if exists("g:tsservice_loaded")
+    if !exists("b:opened")
+        call tsservice#initBuffer()
+    endif
+    finish
+endif
+
+let g:tsservice_loaded = 1
 
 if !exists("g:tsserver")
     let g:tsserver = ['node', 'node_modules/typescript/bin/tsserver']
 endif
 
 exec 'pyfile ' . expand('<sfile>:p:h') . '/tsservice.py'
-let b:opened = 1
-let b:endLine = line('$')
-let b:endPos = col([b:endLine, '$'])
-python tssOpen()
 
 func tsservice#updateBuffer()
     let endLine = line('$')
@@ -31,21 +31,17 @@ func tsservice#updateBuffer()
     let b:endPos = endPos
 endfunc
 
-let g:tsservice_loaded = 1
-
 "callbacks
 
 func tsservice#defJump()
     python tssDefinition()
     python tssHandleRecent()
 endfunc
-nnoremap <buffer> <c-]> :call tsservice#defJump()<CR>
 "
 func tsservice#listUsages()
     python tssUsages()
     python tssHandleRecent()
 endfunc
-nnoremap <buffer> <F12> :call tsservice#listUsages()<CR>
 
 func tsservice#fileErr()
     python tssFileErr()
@@ -67,6 +63,24 @@ func tsservice#complete(findstart, base)
         return pyeval('tssHandleRecent()')
     endif
 endfunc
-set omnifunc=tsservice#complete
 
-autocmd BufWritePost *.ts call tsservice#updateBuffer() | call tsservice#fileErr()
+func tsservice#setDefaultKeymap()
+    nnoremap <buffer> <c-]> :call tsservice#defJump()<CR>
+    nnoremap <buffer> <F12> :call tsservice#listUsages()<CR>
+    set omnifunc=tsservice#complete
+    autocmd BufWritePost *.ts call tsservice#fileErr()
+endfunc
+
+func tsservice#initBuffer()
+    let b:opened = 1
+    let b:endLine = line('$')
+    let b:endPos = col([b:endLine, '$'])
+    python tssOpen()
+    if !exists("g:tsservice_disable_keymap")
+        call tsservice#setDefaultKeymap()
+    endif
+endfunc
+
+call tsservice#initBuffer()
+
+autocmd BufWritePost *.ts call tsservice#updateBuffer()

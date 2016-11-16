@@ -49,6 +49,9 @@ class CmdChannel:
     def write(self, content):
         self.pid.stdin.write(content)
 
+    def running(self):
+        return self.pid.poll() == None
+
 if in_vim:
     tss = CmdChannel(vim.eval('g:tsserver'))
     tss.process()
@@ -72,7 +75,7 @@ def tssHandleAll():
         tssHandleMsg(parsed)
 
 def tssHandleSeq(seq):
-    while True:
+    while tss.running():
         for line in tss.checkMsgs():
             parsed = tssParseLine(line)
             if parsed == None:
@@ -91,7 +94,7 @@ def tssWaitForFileDiag():
     semanticDiag = False
     syntaxDiag = False
     fp = vim.current.buffer.name
-    while semanticDiag == False or syntaxDiag == False:
+    while tss.running() and (semanticDiag == False or syntaxDiag == False):
         for line in tss.checkMsgs():
             parsed = tssParseLine(line)
             if parsed == None:
@@ -164,10 +167,12 @@ def tssLoc2Qf(msg, fp=None):
         txt = None
         if 'text' in item:
             txt = item['text']
-        qf.append({'filename':f,
+        data = {'filename':f,
                    'lnum': start['line'],
-                   'col': start['offset'],
-                   'text': txt})
+                   'col': start['offset']}
+        if txt:
+            data['text'] = txt
+        qf.append(data)
     return qf
 
 def tssHandleUsages(msg):
